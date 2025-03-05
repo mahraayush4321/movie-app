@@ -10,9 +10,11 @@ const App = () => {
   const [movies, setMovies] = useState([]);
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
-
+  const [loading, setLoading] = useState(false);
+  
   const fetchMovies = async () => {
     if (!searchMovie) return;
+    setLoading(true);
     try {
       const response = await axios.get(`${API_URL}?s=${searchMovie}&apikey=${API_KEY}`);
       if (response.data.Search) {
@@ -26,15 +28,18 @@ const App = () => {
       console.error("Error fetching movies:", error);
       setErrorMessage("Failed to fetch data. Please try again later.");
     }
+    setLoading(false);
   };
 
   const fetchMovieDetails = async (imdbID) => {
+    setLoading(true);
     try {
       const response = await axios.get(`${API_URL}?i=${imdbID}&apikey=${API_KEY}`);
       setSelectedMovie(response.data);
     } catch (error) {
       console.error("Error fetching movie details:", error);
     }
+    setLoading(false);
   };
 
   const handleKeyPress = (e) => {
@@ -43,19 +48,26 @@ const App = () => {
     }
   };
 
-
   return (
     <div className="container">
       <h1 className="title">Movie Search App</h1>
-      <input
-        type="text"
-        value={searchMovie}
-        onKeyPress={handleKeyPress}
-        onChange={(e) => setSearchMovie(e.target.value)}
-        placeholder="Search for a movie..."
-        className="search-bar"
-      />
-      <button onClick={fetchMovies} className="search-button">Search</button>
+      <div className="search-container">
+        <input
+          type="text"
+          value={searchMovie}
+          onKeyPress={handleKeyPress}
+          onChange={(e) => setSearchMovie(e.target.value)}
+          placeholder="Search for a movie..."
+          className="search-bar"
+        />
+        <button onClick={fetchMovies} className="search-button">Search</button>
+      </div>
+      
+      {loading && (
+        <div className="loader-container">
+          <div className="loader"></div>
+        </div>
+      )}
 
       {errorMessage && <p className="error-message">{errorMessage}</p>}
 
@@ -72,7 +84,7 @@ const App = () => {
         ))}
       </div>
 
-      {selectedMovie && (
+      {selectedMovie && !loading && (
         <div className="movie-details">
           <h2>{selectedMovie.Title} ({selectedMovie.Year})</h2>
           <p><strong>Actors:</strong> {selectedMovie.Actors}</p>
